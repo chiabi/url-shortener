@@ -2,7 +2,7 @@
 const express = require('express')
 const morgan = require('morgan')
 const randomstring = require('randomstring')
-
+const bodyParser = require('body-parser')
 const app = express()
 
 const urls = [
@@ -15,10 +15,26 @@ const urls = [
 app.use('/static', express.static('public'))
 // app.use(morgan('combined'))
 app.use(morgan('dev'))
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
 
 app.get('/', (req, res) => {
   const host = req.get('host');
   res.render('index.ejs', {host, urls})
+})
+
+// express는 먼저 등록된 라우트 핸들러 먼저 실행된다.
+app.get('/new', (req, res) => {
+  res.render('new.ejs')
+})
+
+app.post('/new', (req, res) => {
+  const urlItem = {
+    longUrl: req.body.longUrl,
+    slug: randomstring.generate(8)
+  }
+  urls.push(urlItem)
+  res.redirect('/')
 })
 
 app.get('/:slug', (req, res) => {
@@ -26,7 +42,7 @@ app.get('/:slug', (req, res) => {
   if(urlItem) {
     // 한번만 리디렉션 되고 요청을 서버에 보내지 않는다.
     // 영구히 이동되었고 더이상 바꾸지 않을 것이라는 의미이다.
-    res.redirect(301, urlItem.longUrl)
+    res.redirect(302, urlItem.longUrl)
     // 브라우저 캐시에 남는다.
 
     // 시크릿 탭을 이용하면 된다.
@@ -35,10 +51,6 @@ app.get('/:slug', (req, res) => {
     res.status(400)
     res.send('404 not found');
   }
-})
-
-app.post('/new', (req, res) => {
-
 })
 
 app.listen(3000, () => {
