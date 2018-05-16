@@ -1,3 +1,4 @@
+require('dotenv').config()
 // 모듈을 불러오는 코드는 대개 맨 위에 작성한다.
 const express = require('express')
 const morgan = require('morgan')
@@ -25,7 +26,14 @@ app.get('/', (req, res) => {
 
 // express는 먼저 등록된 라우트 핸들러 먼저 실행된다.
 app.get('/new', (req, res) => {
-  res.render('new.ejs')
+  // if (req.query.secret === 'CAMPUS') {
+  if (req.query.secret === process.env.SECRET) {
+    res.render('new.ejs')
+  } else {
+    // 권한이 없을 때는 403
+    res.status(403)
+    res.send('403 Forbindden')
+  }
 })
 
 app.post('/new', (req, res) => {
